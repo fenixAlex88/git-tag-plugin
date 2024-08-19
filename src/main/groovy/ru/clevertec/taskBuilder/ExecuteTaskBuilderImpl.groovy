@@ -2,32 +2,32 @@ package ru.clevertec.taskBuilder
 
 import org.gradle.api.Project
 import org.gradle.api.Task
-import ru.clevertec.TaskExecutor
-import ru.clevertec.TaskName
+import ru.clevertec.taskExecutor.TaskExecutor
+import ru.clevertec.TaskNames
 
-class ExecuteTaskBuilder {
+class ExecuteTaskBuilderImpl implements TaskBuilder {
     private final Project project
-    private final TaskName taskName
+    private final TaskNames taskName
     private String group
     private TaskExecutor executor
     private List<String> dependencies = []
 
-    ExecuteTaskBuilder(Project project, TaskName taskName) {
+    ExecuteTaskBuilderImpl(Project project, TaskNames taskName) {
         this.project = project
         this.taskName = taskName
     }
 
-    ExecuteTaskBuilder withGroup(String group) {
+    ExecuteTaskBuilderImpl withGroup(String group) {
         this.group = group
         return this
     }
 
-    ExecuteTaskBuilder withExecutor(TaskExecutor executor) {
+    ExecuteTaskBuilderImpl withExecutor(TaskExecutor executor) {
         this.executor = executor
         return this
     }
 
-    ExecuteTaskBuilder dependsOn(TaskName... tasks) {
+    ExecuteTaskBuilderImpl dependsOn(TaskNames... tasks) {
         this.dependencies.addAll(tasks.collect { it.getName() })
         return this
     }

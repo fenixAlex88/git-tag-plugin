@@ -1,12 +1,13 @@
 package ru.clevertec
 
-import org.gradle.api.GradleException
 import org.gradle.api.Plugin
 import org.gradle.api.Project
-import ru.clevertec.VersionImpl.VersionImpl
-import ru.clevertec.taskBuilder.ExecuteTaskBuilder
-import ru.clevertec.taskExecutorImpl.CustomTaskExecutor
-import ru.clevertec.taskExecutorImpl.GitCommandExecutor
+import org.gradle.api.GradleException
+import ru.clevertec.commandExecutor.CommandExecutor
+import ru.clevertec.commandExecutor.CommandExecutorImpl
+import ru.clevertec.version.VersionImpl
+import ru.clevertec.taskBuilder.ExecuteTaskBuilderImpl
+import ru.clevertec.taskExecutor.TaskExecutorImpl
 
 class GitTagPlugin implements Plugin<Project> {
 
@@ -18,104 +19,141 @@ class GitTagPlugin implements Plugin<Project> {
     static final String GET_LAST_TAG = 'git tag'
     static final String GET_CURRENT_TAG = 'git describe --tags --exact-match'
     static final String CHECK_UNCOMMITTED_CHANGES = 'git status --porcelain'
+    static final String SET_TAG = 'git tag '
+    static final String CHECK_GIT_REMOTE_REPO = 'git remote'
+    static final String SET_REMOTE_TAG = 'git push origin tag '
+
+    String lastTag
+    String currentTag
+    String newTag
+    String currentBranch
+    String remoteRepo
+    boolean hasUncommittedChanges
+
+    CommandExecutor executor = new CommandExecutorImpl()
 
     @Override
     void apply(Project project) {
-        new ExecuteTaskBuilder(project, TaskName.CHECK_GIT_INSTALLED)
-                .withGroup(GIT_TAG_GROUP)
-                .withExecutor(new GitCommandExecutor(CHECK_GIT_INSTALLED, 'Git installed', 'Git is not installed. Please install Git and try again.'))
-                .build()
 
-        new ExecuteTaskBuilder(project, TaskName.CHECK_GIT_REPO)
+        new ExecuteTaskBuilderImpl(project, TaskNames.CHECK_GIT_INSTALLED)
                 .withGroup(GIT_TAG_GROUP)
-                .withExecutor(new GitCommandExecutor(CHECK_GIT_REPO, 'Git repository found', 'This is not a git repository.'))
-                .dependsOn(TaskName.CHECK_GIT_INSTALLED)
-                .build()
-
-        new ExecuteTaskBuilder(project, TaskName.GET_CURRENT_BRANCH)
-                .withGroup(GIT_TAG_GROUP)
-                .withExecutor(new CustomTaskExecutor({ proj ->
-                    def branch = GET_CURRENT_BRANCH.execute().text.trim()
-                    proj.ext.currentBranch = branch
-                    println "Current branch: ${branch}"
+                .withExecutor(new TaskExecutorImpl({
+                    executor.execute(CHECK_GIT_INSTALLED, 'Git not installed')
+                    println "Git installed"
                 }))
-                .dependsOn(TaskName.CHECK_GIT_REPO)
                 .build()
 
-        new ExecuteTaskBuilder(project, TaskName.GET_LAST_TAG)
+        new ExecuteTaskBuilderImpl(project, TaskNames.CHECK_GIT_REPO)
                 .withGroup(GIT_TAG_GROUP)
-                .withExecutor(new CustomTaskExecutor({ proj ->
-                    def tags = GET_LAST_TAG.execute().text.trim().split('\n').toList()
-                    def lastVersion = VersionImpl.getLastVersion(tags)
-                    proj.ext.lastTag = lastVersion.getVersion()
-                    println "Last tag: ${proj.ext.lastTag}"
+                .withExecutor(new TaskExecutorImpl({
+                    executor.execute(CHECK_GIT_REPO, 'This is not a git repository.', true)
+                    println 'Git repository exists'
                 }))
-                .dependsOn(TaskName.CHECK_GIT_REPO)
+                .dependsOn(TaskNames.CHECK_GIT_INSTALLED)
                 .build()
 
-        new ExecuteTaskBuilder(project, TaskName.CHECK_UNCOMMITTED_CHANGES)
+        new ExecuteTaskBuilderImpl(project, TaskNames.GET_CURRENT_BRANCH)
                 .withGroup(GIT_TAG_GROUP)
-                .withExecutor(new CustomTaskExecutor({ proj ->
-                    def uncommittedChanges = CHECK_UNCOMMITTED_CHANGES.execute().text.trim()
-                    proj.ext.hasUncommittedChanges = !uncommittedChanges.isEmpty()
-                    println "${proj.ext.hasUncommittedChanges ? "There are" : "No"} uncommitted changes"
+                .withExecutor(new TaskExecutorImpl({
+                    currentBranch = executor.execute(GET_CURRENT_BRANCH, 'Error retrieving current branch', true)
+                    println "Current branch: ${currentBranch}"
                 }))
-                .dependsOn(TaskName.CHECK_GIT_REPO)
+                .dependsOn(TaskNames.CHECK_GIT_REPO)
                 .build()
 
-        new ExecuteTaskBuilder(project, TaskName.GET_CURRENT_TAG)
+        new ExecuteTaskBuilderImpl(project, TaskNames.GET_LAST_TAG)
                 .withGroup(GIT_TAG_GROUP)
-                .withExecutor(new CustomTaskExecutor({ proj ->
-                    proj.ext.currentTag = GET_CURRENT_TAG.execute().text.trim()
+                .withExecutor(new TaskExecutorImpl({
+                    def tags = executor.execute(GET_LAST_TAG, 'Error retrieving tags').split('\n').toList()
+                    lastTag = VersionImpl.getLastVersion(tags).getVersion()
+                    println "Last tag: ${lastTag}"
                 }))
-                .dependsOn(TaskName.CHECK_GIT_REPO)
+                .dependsOn(TaskNames.CHECK_GIT_REPO)
                 .build()
 
-        new ExecuteTaskBuilder(project, TaskName.DETERMINE_VERSION)
+        new ExecuteTaskBuilderImpl(project, TaskNames.CHECK_UNCOMMITTED_CHANGES)
                 .withGroup(GIT_TAG_GROUP)
-                .withExecutor(new CustomTaskExecutor({ proj ->
+                .withExecutor(new TaskExecutorImpl({
+                    def uncommittedChanges = executor.execute(CHECK_UNCOMMITTED_CHANGES, 'Error checking uncommitted changes')
+                    hasUncommittedChanges = !uncommittedChanges.isEmpty()
+                    if (hasUncommittedChanges) {
+                       throw new GradleException("Uncommitted changes: ${lastTag}.uncommitted")
+                    }
+                    println "No uncommitted changes"
+                }))
+                .dependsOn(TaskNames.GET_LAST_TAG)
+                .build()
+
+        new ExecuteTaskBuilderImpl(project, TaskNames.GET_CURRENT_TAG)
+                .withGroup(GIT_TAG_GROUP)
+                .withExecutor(new TaskExecutorImpl({
+                    currentTag = executor.execute(GET_CURRENT_TAG, 'Error retrieving current tag')
+                    println currentTag ? "Current tag: ${currentTag}" : "No current tag"
+                }))
+                .dependsOn(TaskNames.CHECK_GIT_REPO)
+                .build()
+
+        new ExecuteTaskBuilderImpl(project, TaskNames.GET_UPDATED_VERSION)
+                .withGroup(GIT_TAG_GROUP)
+                .withExecutor(new TaskExecutorImpl({
                     try {
-                        Version version = new VersionImpl()
-                        version.setVersion(proj.ext.lastTag as String)
-                        def newVersion = version.createNewVersion(
-                                proj.ext.currentBranch as String,
-                                proj.ext.hasUncommittedChanges as boolean,
-                                proj.ext.currentTag as String
+                        VersionImpl version = new VersionImpl()
+                        version.setVersion(lastTag)
+                        newTag = version.createNewVersion(
+                                currentBranch,
+                                currentTag
                         )
-                        proj.ext.newVersion = newVersion
-                        println "New version: ${newVersion}"
+                        println "New tag: ${newTag}"
                     } catch (Exception e) {
                         throw new GradleException('Error in tag name', e)
                     }
                 }))
                 .dependsOn(
-                        TaskName.GET_CURRENT_BRANCH,
-                        TaskName.GET_LAST_TAG,
-                        TaskName.CHECK_UNCOMMITTED_CHANGES,
-                        TaskName.GET_CURRENT_TAG
+                        TaskNames.GET_CURRENT_BRANCH,
+                        TaskNames.GET_LAST_TAG,
+                        TaskNames.CHECK_UNCOMMITTED_CHANGES,
+                        TaskNames.GET_CURRENT_TAG
                 )
                 .build()
 
-        new ExecuteTaskBuilder(project, TaskName.ADD_TAG)
+        new ExecuteTaskBuilderImpl(project, TaskNames.ADD_TAG)
                 .withGroup(GIT_TAG_GROUP)
-                .withExecutor(new CustomTaskExecutor({ proj ->
-                    if (proj.ext.hasUncommittedChanges) {
-                        println "Build version with uncommitted changes: ${proj.ext.newVersion}.uncommitted"
+                .withExecutor(new TaskExecutorImpl({
+                    if (hasUncommittedChanges) {
+                        println "Build version with uncommitted changes: ${newTag}.uncommitted"
                         return
                     }
-                    if (proj.ext.currentTag) {
-                        println "Current state already has a tag: ${proj.ext.currentTag}. No new tag will be created."
+                    if (currentTag) {
+                        println "Current state already has a tag: ${currentTag}. No new tag will be created."
                         return
                     }
-                    if (!proj.ext.has('newVersion')) {
+                    if (!newTag) {
                         throw new GradleException('newVersion property is not set. Ensure determineVersion task is executed.')
                     }
-                    def newVersion = proj.ext.newVersion
-                    if (newVersion != '.uncommitted') {
-                        "git tag ${newVersion}".execute().waitFor()
-                    }
+                    executor.execute(SET_TAG + newTag, "Error adding tag")
+                    println "Tag \"${newTag}\" added"
                 }))
-                .dependsOn(TaskName.DETERMINE_VERSION)
+                .dependsOn(TaskNames.GET_UPDATED_VERSION)
                 .build()
+
+        new ExecuteTaskBuilderImpl(project, TaskNames.CHECK_GIT_REMOTE_REPO)
+                .withGroup(GIT_TAG_GROUP)
+                .withExecutor(new TaskExecutorImpl({
+                    remoteRepo = executor.execute(CHECK_GIT_REMOTE_REPO, 'This is not a git remote repository.', true)
+                    println 'Git remote repository exists'
+                }))
+                .dependsOn(TaskNames.CHECK_GIT_REPO)
+                .build()
+
+        new ExecuteTaskBuilderImpl(project, TaskNames.ADD_REMOTE_TAG)
+                .withGroup(GIT_TAG_GROUP)
+                .withExecutor(new TaskExecutorImpl({
+                    executor.execute(SET_REMOTE_TAG + newTag, "Error adding remote tag")
+                    println "Tag \"${newTag}\" added on remote repository"
+
+                }))
+                .dependsOn(TaskNames.CHECK_GIT_REMOTE_REPO, TaskNames.ADD_TAG)
+                .build()
+
     }
 }

@@ -1,4 +1,4 @@
-package ru.clevertec
+package ru.clevertec.taskExecutor
 
 import org.gradle.api.Project
 

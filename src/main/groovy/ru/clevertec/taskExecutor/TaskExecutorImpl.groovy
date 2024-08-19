@@ -1,12 +1,11 @@
-package ru.clevertec.taskExecutorImpl
+package ru.clevertec.taskExecutor
 
 import org.gradle.api.Project
-import ru.clevertec.TaskExecutor
 
-class CustomTaskExecutor implements TaskExecutor{
+class TaskExecutorImpl implements TaskExecutor{
     private final Closure action
 
-    CustomTaskExecutor(Closure action) {
+    TaskExecutorImpl(Closure action) {
         this.action = action
     }
 
