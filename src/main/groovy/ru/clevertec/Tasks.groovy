@@ -1,6 +1,6 @@
 package ru.clevertec
 
-enum TaskNames {
+enum Tasks {
     CHECK_GIT_INSTALLED('checkGitInstalled'),
     CHECK_GIT_REPO('checkGitRepo'),
     CHECK_GIT_REMOTE_REPO('checkGitRemoteRepo'),
@@ -14,7 +14,7 @@ enum TaskNames {
 
     final String taskName
 
-    TaskNames(String taskName) {
+    Tasks(String taskName) {
         this.taskName = taskName
     }
 
