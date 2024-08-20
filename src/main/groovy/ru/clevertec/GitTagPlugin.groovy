@@ -23,49 +23,59 @@ class GitTagPlugin implements Plugin<Project> {
     void apply(Project project) {
         project.extensions.create('gitTag', GitTagExtension)
 
-        project.tasks.register(Tasks.CHECK_GIT_INSTALLED.name, CheckGitInstalledTask) {
+        project.tasks.register(Tasks.CHECK_GIT_INSTALLED.getName(), CheckGitInstalledTask) {
             group = GIT_TAG_GROUP
+            description = Tasks.CHECK_GIT_INSTALLED.getDescription()
         }
-        project.tasks.register(Tasks.CHECK_GIT_REPO.name, CheckGitRepoTask) {
+        project.tasks.register(Tasks.CHECK_GIT_REPO.getName(), CheckGitRepoTask) {
             group = GIT_TAG_GROUP
-            dependsOn(Tasks.CHECK_GIT_INSTALLED.name)
+            description = Tasks.CHECK_GIT_REPO.getDescription()
+            dependsOn(Tasks.CHECK_GIT_INSTALLED.getName())
         }
-        project.tasks.register(Tasks.GET_CURRENT_BRANCH.name, GetCurrentBranchTask) {
+        project.tasks.register(Tasks.GET_CURRENT_BRANCH.getName(), GetCurrentBranchTask) {
             group = GIT_TAG_GROUP
-            dependsOn(Tasks.CHECK_GIT_REPO.name)
+            description = Tasks.GET_CURRENT_BRANCH.getDescription()
+            dependsOn(Tasks.CHECK_GIT_REPO.getName())
         }
-        project.tasks.register(Tasks.GET_LAST_TAG.name, GetLastTagTask) {
+        project.tasks.register(Tasks.GET_LAST_TAG.getName(), GetLastTagTask) {
             group = GIT_TAG_GROUP
-            dependsOn(Tasks.CHECK_GIT_REPO.name)
+            description = Tasks.GET_LAST_TAG.getDescription()
+            dependsOn(Tasks.CHECK_GIT_REPO.getName())
         }
-        project.tasks.register(Tasks.CHECK_UNCOMMITTED_CHANGES.name, CheckUncommittedChangesTask) {
+        project.tasks.register(Tasks.CHECK_UNCOMMITTED_CHANGES.getName(), CheckUncommittedChangesTask) {
             group = GIT_TAG_GROUP
-            dependsOn(Tasks.CHECK_GIT_REPO.name, Tasks.GET_LAST_TAG.name)
+            description = Tasks.CHECK_UNCOMMITTED_CHANGES.getDescription()
+            dependsOn(Tasks.CHECK_GIT_REPO.getName(), Tasks.GET_LAST_TAG.getName())
         }
-        project.tasks.register(Tasks.GET_CURRENT_TAG.name, GetCurrentTagTask) {
+        project.tasks.register(Tasks.GET_CURRENT_TAG.getName(), GetCurrentTagTask) {
             group = GIT_TAG_GROUP
-            dependsOn(Tasks.CHECK_GIT_REPO.name)
+            description = Tasks.GET_CURRENT_TAG.getDescription()
+            dependsOn(Tasks.CHECK_GIT_REPO.getName())
         }
-        project.tasks.register(Tasks.GET_UPDATED_VERSION.name, GetUpdatedVersionTask) {
+        project.tasks.register(Tasks.GET_UPDATED_VERSION.getName(), GetUpdatedVersionTask) {
             group = GIT_TAG_GROUP
+            description = Tasks.GET_UPDATED_VERSION.getDescription()
             dependsOn(
-                    Tasks.GET_CURRENT_BRANCH.name,
-                    Tasks.GET_LAST_TAG.name,
-                    Tasks.CHECK_UNCOMMITTED_CHANGES.name,
-                    Tasks.GET_CURRENT_TAG.name
+                    Tasks.GET_CURRENT_BRANCH.getName(),
+                    Tasks.GET_LAST_TAG.getName(),
+                    Tasks.CHECK_UNCOMMITTED_CHANGES.getName(),
+                    Tasks.GET_CURRENT_TAG.getName()
             )
         }
-        project.tasks.register(Tasks.ADD_TAG.name, AddTagTask) {
+        project.tasks.register(Tasks.ADD_TAG.getName(), AddTagTask) {
             group = GIT_TAG_GROUP
-            dependsOn(Tasks.GET_UPDATED_VERSION.name)
+            description = Tasks.ADD_TAG.getDescription()
+            dependsOn(Tasks.GET_UPDATED_VERSION.getName())
         }
-        project.tasks.register(Tasks.CHECK_GIT_REMOTE_REPO.name, CheckGitRemoteRepoTask) {
+        project.tasks.register(Tasks.CHECK_GIT_REMOTE_REPO.getName(), CheckGitRemoteRepoTask) {
             group = GIT_TAG_GROUP
-            dependsOn(Tasks.CHECK_GIT_REPO.name)
+            description = Tasks.CHECK_GIT_REMOTE_REPO.getDescription()
+            dependsOn(Tasks.CHECK_GIT_REPO.getName())
         }
-        project.tasks.register(Tasks.ADD_REMOTE_TAG.name, AddRemoteTagTask) {
+        project.tasks.register(Tasks.ADD_REMOTE_TAG.getName(), AddRemoteTagTask) {
             group = GIT_TAG_GROUP
-            dependsOn(Tasks.CHECK_GIT_REMOTE_REPO.name, Tasks.ADD_TAG.name)
+            description = Tasks.ADD_REMOTE_TAG.getDescription()
+            dependsOn(Tasks.CHECK_GIT_REMOTE_REPO.getName(), Tasks.ADD_TAG.getName())
         }
     }
 }
