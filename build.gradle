@@ -1,0 +1,29 @@
+plugins {
+    id 'java-gradle-plugin'
+    id 'groovy'
+    id 'maven-publish'
+}
+
+group = 'ru.clevertec'
+version = '1.0.0'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+}
+
+gradlePlugin {
+    plugins {
+        gitTagPlugin  {
+            id = 'ru.clevertec.git-tag-plugin'
+            implementationClass = 'ru.clevertec.GitTagPlugin'
+        }
+    }
+}
+
+test {
+    useJUnitPlatform()
+}
+
