@@ -17,8 +17,8 @@ class AddTagTask extends DefaultTask {
     @TaskAction
     void checkGitInstalled() {
         def gitTag = project.extensions.findByType(GitTagExtension)
-        def newTag = gitTag.getNewTag()
-        def currentTag = gitTag.getCurrentTag()
+        def newTag = gitTag.getNewTag().orElseThrow(() -> new GradleException("New tag is not set"))
+        def currentTag = gitTag.getCurrentTag().orElse(null)
         def hasUncommittedChanges = gitTag.getHasUncommittedChanges()
         if (hasUncommittedChanges) {
             println "Build version with uncommitted changes: ${newTag}.uncommitted"

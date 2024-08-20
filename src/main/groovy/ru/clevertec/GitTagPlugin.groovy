@@ -40,7 +40,7 @@ class GitTagPlugin implements Plugin<Project> {
         }
         project.tasks.register(Tasks.CHECK_UNCOMMITTED_CHANGES.name, CheckUncommittedChangesTask) {
             group = GIT_TAG_GROUP
-            dependsOn(Tasks.CHECK_GIT_REPO.name)
+            dependsOn(Tasks.CHECK_GIT_REPO.name, Tasks.GET_LAST_TAG.name)
         }
         project.tasks.register(Tasks.GET_CURRENT_TAG.name, GetCurrentTagTask) {
             group = GIT_TAG_GROUP

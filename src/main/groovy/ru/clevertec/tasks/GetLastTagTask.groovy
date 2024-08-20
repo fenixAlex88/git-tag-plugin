@@ -21,9 +21,14 @@ class GetLastTagTask extends DefaultTask {
         def tags = executor.execute(GET_LAST_TAG, 'Error retrieving tags', false)
                 .split('\n')
                 .toList()
-        def lastTag = TagService.getLastVersion(tags)
-                .getVersion()
+        if (tags.isEmpty()) {
+            println "No tags found"
+            gitTag.setLastTag(Optional.empty())
+            return
+        }
+
+        def lastTag = TagService.getLastVersion(tags)?.getVersion()
         println "Last tag: ${lastTag}"
-        gitTag.setLastTag(lastTag)
+        gitTag.setLastTag(Optional.of(lastTag))
     }
 }

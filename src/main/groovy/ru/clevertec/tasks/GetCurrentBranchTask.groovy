@@ -19,6 +19,6 @@ class GetCurrentBranchTask extends DefaultTask {
         def gitTag = project.extensions.findByType(GitTagExtension)
         String currentBranch = executor.execute(GET_CURRENT_BRANCH, 'Error retrieving current branch', true)
         println "Current branch: ${currentBranch}"
-        gitTag.setCurrentBranch(currentBranch)
+        gitTag.setCurrentBranch(Optional.of(currentBranch))
     }
 }

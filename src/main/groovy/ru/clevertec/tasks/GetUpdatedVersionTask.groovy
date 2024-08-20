@@ -14,13 +14,13 @@ class GetUpdatedVersionTask extends DefaultTask {
         def gitTag = project.extensions.findByType(GitTagExtension)
         try {
             Version version = new Version()
-            version.setVersion(gitTag.getLastTag())
+            version.setVersion(gitTag.getLastTag().orElse("No tags"))
             def newTag = version.createNewVersion(
-                    gitTag.getCurrentBranch(),
-                    gitTag.getCurrentTag()
+                    gitTag.getCurrentBranch().orElseThrow(() -> new GradleException("Current branch is not set")),
+                    gitTag.getCurrentTag().orElse(null)
             )
             println "New tag: ${newTag}"
-            gitTag.setNewTag(newTag)
+            gitTag.setNewTag(Optional.of(newTag))
         } catch (Exception e) {
             throw new GradleException('Error in tag name', e)
         }

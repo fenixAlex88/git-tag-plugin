@@ -19,6 +19,6 @@ class GetCurrentTagTask extends DefaultTask {
         def gitTag = project.extensions.findByType(GitTagExtension)
         def currentTag = executor.execute(GET_CURRENT_TAG, 'Error retrieving current tag', false)
         println currentTag ? "Current tag: ${currentTag}" : "No current tag"
-        gitTag.setCurrentTag(currentTag)
+        gitTag.setCurrentTag(Optional.ofNullable(currentTag))
     }
 }

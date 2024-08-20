@@ -1,21 +1,18 @@
 package ru.clevertec.extension
 
 interface GitTagExtension {
-    String getLastTag()
-    void setLastTag(String lastTag)
+    Optional<String> getLastTag();
+    void setLastTag(Optional<String> lastTag);
 
-    String getCurrentTag()
-    void setCurrentTag(String currentTag)
+    Optional<String> getCurrentTag();
+    void setCurrentTag(Optional<String> currentTag);
 
-    String getNewTag()
-    void setNewTag(String newTag)
+    Optional<String> getNewTag();
+    void setNewTag(Optional<String> newTag);
 
-    String getCurrentBranch()
-    void setCurrentBranch(String currentBranch)
+    Optional<String> getCurrentBranch();
+    void setCurrentBranch(Optional<String> currentBranch);
 
-    String getRemoteRepo()
-    void setRemoteRepo(String remoteRepo)
-
-    boolean getHasUncommittedChanges()
-    void setHasUncommittedChanges(boolean hasUncommittedChanges)
+    boolean getHasUncommittedChanges();
+    void setHasUncommittedChanges(boolean hasUncommittedChanges);
 }

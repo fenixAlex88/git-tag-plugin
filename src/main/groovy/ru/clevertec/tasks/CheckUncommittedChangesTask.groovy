@@ -22,7 +22,8 @@ class CheckUncommittedChangesTask extends DefaultTask {
         def hasUncommittedChanges = !uncommittedChanges.isEmpty()
         gitTag.setHasUncommittedChanges(hasUncommittedChanges)
         if (hasUncommittedChanges) {
-            throw new GradleException("Uncommitted changes: ${gitTag.getLastTag()}.uncommitted")
+            String lastTag = gitTag.getLastTag().orElse("No tag")
+            throw new GradleException("Uncommitted changes: ${lastTag}.uncommitted")
         }
         println "No uncommitted changes"
     }

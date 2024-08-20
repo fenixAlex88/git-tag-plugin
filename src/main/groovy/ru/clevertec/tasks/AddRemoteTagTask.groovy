@@ -1,6 +1,7 @@
 package ru.clevertec.tasks
 
 import org.gradle.api.DefaultTask
+import org.gradle.api.GradleException
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.TaskAction
 import ru.clevertec.commandExecutor.CommandExecutor
@@ -17,7 +18,7 @@ class AddRemoteTagTask extends DefaultTask {
     @TaskAction
     void addRemoteTag() {
         def gitTag = project.extensions.findByType(GitTagExtension)
-        def newTag = gitTag.getNewTag()
+        def newTag = gitTag.getNewTag().orElseThrow(() -> new GradleException("New tag is not set"))
         executor.execute(SET_REMOTE_TAG + newTag, "Error adding remote tag", false)
         println "Tag \"${newTag}\" added on remote repository"
     }
